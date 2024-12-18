@@ -1,0 +1,145 @@
+### GPSReader Class and Main File Documentation
+
+#### **Overview**
+This code allows for continuous reading and parsing of GPS data from a GPS module connected via a serial port. It uses the `pyserial` library to interact with the GPS module and the `pynmea2` library to parse NMEA sentences. The GPSReader class processes the GPS data and provides methods to retrieve specific details like latitude, longitude, speed, UTC time, local time, and more.
+
+### **Dependencies**
+1. **pyserial**: Used for serial communication with the GPS device. Install it using:
+   ```bash
+   pip install pyserial
+   ```
+2. **pynmea2**: A library for parsing NMEA GPS data. Install it using:
+   ```bash
+   pip install pynmea2
+   ```
+
+---
+
+### **GPSReader Class Documentation**
+
+#### **Class: GPSReader**
+The `GPSReader` class is designed to handle and parse GPS data. It supports the following functionalities:
+- Parsing of GPS NMEA sentences (RMC sentence type).
+- Conversion of UTC time to local time.
+- Extraction and storage of GPS data like latitude, longitude, speed, and date.
+
+#### **Methods:**
+
+1. **`__init__(self)`**
+   - **Purpose**: Initializes the GPSReader object, setting default values for all attributes.
+   - **Attributes Initialized**:
+     - `latitude`: Stores latitude value.
+     - `longitude`: Stores longitude value.
+     - `speed`: Stores speed over ground.
+     - `utc_time`: Stores UTC timestamp.
+     - `local_time`: Stores local time converted from UTC.
+     - `status`: Stores the status of the GPS signal (active or void).
+     - `date`: Stores the date in DDMMYY format.
+
+2. **`get_zone_time(self, utc_time)`**
+   - **Purpose**: Converts UTC time to local time by applying a predefined time zone offset.
+   - **Parameters**:
+     - `utc_time` (datetime): The UTC time to be converted.
+   - **Returns**:
+     - `local_time` (datetime): The local time adjusted based on the time zone offset.
+   - **Note**: The `local_offset` is hardcoded to 5 hours and 30 minutes, but it can be modified based on your location.
+
+3. **`parse_gps_data(self, line)`**
+   - **Purpose**: Parses a single line of NMEA data (RMC sentence type) and extracts relevant GPS information.
+   - **Parameters**:
+     - `line` (str): A string containing the NMEA sentence to be parsed.
+   - **Returns**:
+     - `True` if the data was parsed successfully, `False` otherwise.
+   - **Attributes Updated**:
+     - `utc_time`: Extracted from the NMEA sentence.
+     - `local_time`: Converted from UTC time using `get_zone_time`.
+     - `status`: The status of the GPS signal ('A' for Active, 'V' for Void).
+     - `latitude`: Extracted latitude value.
+     - `longitude`: Extracted longitude value.
+     - `speed`: Speed over ground.
+     - `date`: Date in DDMMYY format.
+
+4. **Getter Methods**:
+   - **`get_latitude(self)`**:
+     - **Returns**: The latitude extracted from the GPS data.
+   - **`get_longitude(self)`**:
+     - **Returns**: The longitude extracted from the GPS data.
+   - **`get_speed(self)`**:
+     - **Returns**: The speed over ground in knots.
+   - **`get_utc_time(self)`**:
+     - **Returns**: The UTC time as a `datetime` object.
+   - **`get_local_time(self)`**:
+     - **Returns**: The local time as a `datetime` object.
+   - **`get_status(self)`**:
+     - **Returns**: The GPS status (either "Active" or "Void").
+   - **`get_date(self)`**:
+     - **Returns**: The date in DDMMYY format.
+
+---
+
+### **Main Script Documentation**
+
+This part of the code interacts with the GPS module via a serial connection, reads the incoming GPS data, and prints parsed GPS information such as time, latitude, longitude, speed, and status.
+
+#### **Key Steps in the Script:**
+
+1. **Define Serial Port and Baud Rate**:
+   - `SERIAL_PORT`: The serial port where the GPS module is connected (e.g., "COM16" for Windows or "/dev/ttyUSB0" for Linux).
+   - `BAUD_RATE`: The communication rate with the GPS module (usually 9600).
+
+2. **Initialize GPSReader**:
+   - Creates an instance of the `GPSReader` class to handle parsing and extracting GPS data.
+
+3. **Establish Serial Connection**:
+   - Uses `serial.Serial` to open a serial connection to the GPS module.
+   - If the connection fails, an exception will be caught and an error message will be printed.
+
+4. **Read GPS Data Continuously**:
+   - The script continuously reads data from the GPS module.
+   - It waits for new data (`in_waiting > 0`), reads a line of data, decodes it, and checks if the line starts with a `$`, indicating it's a valid NMEA sentence.
+   - The line is parsed using the `GPSReader.parse_gps_data()` method. If parsing is successful, it prints various GPS data such as time, latitude, longitude, and speed.
+
+5. **Handling KeyboardInterrupt**:
+   - If the script is interrupted (Ctrl+C), a clean exit is ensured by closing the serial connection.
+
+6. **Final Cleanup**:
+   - After exiting the loop, the serial connection is closed, and a message indicating disconnection is printed.
+
+#### **Example Output**:
+```text
+Listening to GPS data on COM16 at 9600 baud.
+Time (UTC): 14:32:45+00:00
+Zone Time: 19:02:45
+Status: Active
+Latitude: 12.345678 N
+Longitude: 98.765432 E
+Speed (knots): 12.4
+Date: 101224
+
+Time (UTC): 14:32:50+00:00
+Zone Time: 19:02:50
+Status: Active
+Latitude: 12.345679 N
+Longitude: 98.765433 E
+Speed (knots): 12.5
+Date: 101224
+
+...
+```
+
+---
+
+### **Error Handling**
+- **GPS Module Connection**: If the GPS module cannot be connected to the specified serial port, an error message is printed.
+- **Data Parsing Errors**: If a line cannot be parsed, an error message is displayed indicating the parsing issue.
+
+---
+
+### **Modifications and Customizations**
+1. **Time Zone Offset**: The time zone offset is hardcoded for India Standard Time (UTC +5:30). You can modify this in the `get_zone_time` method to match your local time zone.
+2. **Additional GPS Data**: You can extend the functionality of the `GPSReader` class by adding more NMEA sentence types and parsing logic.
+
+---
+
+### **Conclusion**
+This solution provides a comprehensive system for reading, parsing, and displaying GPS data. It offers flexibility for modifying the time zone offset, handling different types of NMEA sentences, and easily integrating into more complex systems.
